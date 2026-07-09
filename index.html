@@ -12,21 +12,43 @@
 </head>
 <body class="bg-[#212121] text-[#ececec] h-screen flex font-sans overflow-hidden">
 
-    <aside class="w-[260px] bg-[#171717] h-full flex flex-col justify-between p-3 hidden md:flex border-r border-[#2f2f2f]">
+    <aside class="w-[280px] bg-[#171717] h-full flex flex-col justify-between p-3 hidden md:flex border-r border-[#2f2f2f] shrink-0">
         <div class="flex flex-col h-full overflow-hidden">
-            <button id="new-chat-btn" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium hover:bg-[#212121] transition text-left border border-[#424242] cursor-pointer shrink-0">
+            <button id="new-chat-btn" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium hover:bg-[#212121] transition border border-[#424242] cursor-pointer shrink-0">
                 <span>Nuevo chat</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
             </button>
-            
-            <div class="pt-4 text-xs font-semibold text-gray-500 px-3 shrink-0">Historial Reciente</div>
-            <nav id="history-list" class="flex-1 overflow-y-auto no-scrollbar space-y-1 text-sm mt-2"></nav>
+
+            <div class="mt-4 shrink-0">
+                <label class="text-xs font-semibold text-gray-500 block px-3 mb-1">PROCESADOR DE IA</label>
+                <select id="engine-select" class="w-full bg-[#212121] text-sm text-[#ececec] border border-[#424242] rounded-lg px-2 py-1.5 focus:outline-none">
+                    <option value="qwen">Qwen 32B (Default Worker)</option>
+                    <option value="claude">Claude 3.5 Sonnet (User Key)</option>
+                </select>
+            </div>
+
+            <div class="mt-4 space-y-2 overflow-y-auto no-scrollbar flex-1 border-t border-[#2f2f2f] pt-3">
+                <div class="px-3">
+                    <span class="text-xs font-semibold text-gray-500 block mb-2">INTEGRACIONES EXTERNAS</span>
+                    
+                    <div id="claude-config-group" class="hidden mb-3">
+                        <label class="text-[11px] text-gray-400 block mb-1">Claude API Key</label>
+                        <input type="password" id="claude-key" placeholder="sk-ant-..." class="w-full bg-[#212121] border border-[#424242] rounded px-2 py-1 text-xs focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <div class="space-y-2 border-t border-[#2f2f2f] pt-2">
+                        <label class="text-[11px] text-gray-400 block font-medium">Conectividad Jira</label>
+                        <input type="text" id="jira-domain" placeholder="tu-empresa.atlassian.net" class="w-full bg-[#212121] border border-[#424242] rounded px-2 py-1 text-xs focus:outline-none">
+                        <input type="text" id="jira-email" placeholder="email@empresa.com" class="w-full bg-[#212121] border border-[#424242] rounded px-2 py-1 text-xs focus:outline-none">
+                        <input type="password" id="jira-token" placeholder="Atlassian API Token" class="w-full bg-[#212121] border border-[#424242] rounded px-2 py-1 text-xs focus:outline-none">
+                        <input type="text" id="jira-issue" placeholder="ID de Ticket (ej: OPS-12)" class="w-full bg-[#212121] border border-[#424242] rounded px-2 py-1 text-xs focus:outline-none">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="border-t border-[#2f2f2f] pt-2 shrink-0">
-            <div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#212121] cursor-pointer text-sm font-medium">
+            <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium">
                 <div class="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-xs font-bold text-white">O</div>
                 <span>Ops Nexus Admin</span>
             </div>
@@ -35,23 +57,19 @@
 
     <div class="flex-1 flex flex-col justify-between h-full relative">
         <header class="w-full h-14 border-b border-[#2f2f2f] flex items-center justify-between px-4 md:justify-center bg-[#212121] shrink-0">
-            <span class="text-sm font-medium text-gray-300 md:text-base">ops-nexus-proxy (Qwen Engine)</span>
-            <div class="w-6 h-6 rounded-full bg-emerald-600 flex md:hidden items-center justify-center text-[10px] font-bold text-white">O</div>
+            <span id="header-engine-title" class="text-sm font-medium text-gray-300 md:text-base">ops-nexus-proxy (Qwen Engine)</span>
         </header>
 
         <main id="chat-container" class="flex-1 overflow-y-auto no-scrollbar py-4 space-y-6 w-full max-w-3xl mx-auto px-4 md:px-0"></main>
 
         <footer class="w-full max-w-3xl mx-auto px-4 pb-6 bg-gradient-to-t from-[#212121] via-[#212121] to-transparent shrink-0">
             <form id="chat-form" class="relative flex items-center bg-[#2f2f2f] rounded-2xl border border-[#424242] focus-within:border-[#565656] shadow-xl px-4 py-3">
-                <input type="text" id="user-input" placeholder="Escribe una instrucción o comando para Qwen..." autocomplete="off" required
+                <input type="text" id="user-input" placeholder="Envía un comando o solicita contexto de Jira..." autocomplete="off" required
                     class="w-full bg-transparent text-[#ececec] text-sm focus:outline-none pr-12 placeholder-gray-500">
-                <button type="submit" id="send-btn" class="absolute right-3 bg-[#ececec] hover:bg-white text-[#212121] rounded-full p-1.5 transition disabled:opacity-30 cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
-                    </svg>
+                <button type="submit" id="send-btn" class="absolute right-3 bg-[#ececec] hover:bg-white text-[#212121] rounded-full p-1.5 transition cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" /></svg>
                 </button>
             </form>
-            <p class="text-center text-[11px] text-gray-500 mt-2">Instancia Proxy aislada y segura. Revisa la sintaxis de los scripts generados.</p>
         </footer>
     </div>
 
@@ -62,24 +80,31 @@
         const chatForm = document.getElementById('chat-form');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
-        const historyList = document.getElementById('history-list');
+        const engineSelect = document.getElementById('engine-select');
+        const headerTitle = document.getElementById('header-engine-title');
+        const claudeConfigGroup = document.getElementById('claude-config-group');
         const newChatBtn = document.getElementById('new-chat-btn');
 
-        let chatHistory = JSON.parse(localStorage.getItem('ops_nexus_history')) || [];
+        let chatHistory = [];
 
-        // Inicialización Avanzada
-        document.addEventListener('DOMContentLoaded', () => {
-            renderHistoryUI();
-            if (chatHistory.length > 0) {
-                chatHistory.forEach(msg => displayMessage(msg.role, msg.content));
-            } else {
-                showWelcomeScreen();
-            }
+        // Cargar inputs guardados del usuario (Persistencia Local de Credenciales)
+        const fields = ['claude-key', 'jira-domain', 'jira-email', 'jira-token', 'jira-issue'];
+        fields.forEach(field => {
+            const el = document.getElementById(field);
+            el.value = localStorage.getItem(`nexus_${field}`) || '';
+            el.addEventListener('input', () => localStorage.setItem(`nexus_${field}`, el.value));
+        });
+
+        document.addEventListener('DOMContentLoaded', showWelcomeScreen);
+
+        engineSelect.addEventListener('change', () => {
+            const mode = engineSelect.value;
+            headerTitle.textContent = mode === 'qwen' ? 'ops-nexus-proxy (Qwen Engine)' : 'ops-nexus-proxy (Claude 3.5 Sonnet)';
+            claudeConfigGroup.style.display = mode === 'claude' ? 'block' : 'none';
         });
 
         newChatBtn.addEventListener('click', () => {
             chatHistory = [];
-            localStorage.removeItem('ops_nexus_history');
             chatContainer.innerHTML = '';
             showWelcomeScreen();
         });
@@ -88,33 +113,16 @@
             chatContainer.innerHTML = `
                 <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center pt-32">
                     <div class="w-12 h-12 rounded-full bg-[#2f2f2f] border border-[#424242] flex items-center justify-center text-xl font-bold mb-4 text-emerald-400">O</div>
-                    <h2 class="text-2xl font-medium text-[#ececec]">¿Qué entorno vamos a automatizar hoy?</h2>
+                    <h2 class="text-2xl font-medium text-[#ececec]">¿Qué operaciones o tickets vamos a procesar hoy?</h2>
                 </div>`;
         }
 
-        // Parseador Avanzado de Markdown (Código en Bloque)
         function formatMarkdown(text) {
-            const codeBlockRegex = /```([\s\S]*?)```/g;
-            return text.replace(codeBlockRegex, (match, code) => {
+            return text.replace(/```([\s\S]*?)```/g, (match, code) => {
                 return `<div class="bg-[#1a1a1a] border border-[#2f2f2f] rounded-lg my-3 font-mono text-sm text-emerald-400 p-4 overflow-x-auto relative">
                     <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-2 select-none">CODE BLOCK</div>
-                    <code>${escapeHtml(code.trim())}</code>
+                    <code>${code.trim()}</code>
                 </div>`;
-            });
-        }
-
-        function escapeHtml(string) {
-            return string.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
-
-        function renderHistoryUI() {
-            historyList.innerHTML = '';
-            const userPrompts = chatHistory.filter(m => m.role === 'user');
-            userPrompts.slice(-5).reverse().forEach(msg => {
-                const item = document.createElement('div');
-                item.className = 'px-3 py-2 rounded-lg text-gray-400 hover:bg-[#212121] hover:text-white cursor-pointer truncate';
-                item.textContent = msg.content;
-                historyList.appendChild(item);
             });
         }
 
@@ -124,100 +132,121 @@
 
             const row = document.createElement('div');
             row.className = `w-full flex gap-4 py-4 ${role === 'user' ? 'justify-end' : 'justify-start'}`;
-
+            
             if (role === 'user') {
-                row.innerHTML = `<div class="max-w-[75%] bg-[#2f2f2f] text-[#ececec] px-4 py-2 rounded-2xl text-[15px] leading-relaxed">${escapeHtml(text)}</div>`;
+                row.innerHTML = `<div class="max-w-[75%] bg-[#2f2f2f] text-[#ececec] px-4 py-2 rounded-2xl text-[15px]">${text}</div>`;
             } else {
                 row.innerHTML = `
                     <div class="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">O</div>
-                    <div class="flex-1 text-[#ececec] text-[15px] leading-relaxed markdown-body">${formatMarkdown(text)}</div>`;
+                    <div class="flex-1 text-[#ececec] text-[15px] font-mono whitespace-pre-wrap bg-[#1a1a1a] p-4 rounded-xl border border-[#2f2f2f]">${formatMarkdown(text)}</div>`;
             }
             chatContainer.appendChild(row);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Efecto de Escritura (Simulated Streaming)
-        function typeWriter(text, elementContainer, callback) {
-            let index = 0;
-            elementContainer.innerHTML = '';
-            
-            // Si el texto contiene bloques de código, formateamos directo para evitar romper etiquetas HTML mientras escribe
-            if(text.includes('```')) {
-                elementContainer.innerHTML = formatMarkdown(text);
-                callback();
-                return;
-            }
+        // LÓGICA DE EXTRACCIÓN DE JIRA REST API (FRONTEND)
+        async function fetchJiraContext() {
+            const domain = document.getElementById('jira-domain').value.trim();
+            const email = document.getElementById('jira-email').value.trim();
+            const token = document.getElementById('jira-token').value.trim();
+            const issueId = document.getElementById('jira-issue').value.trim();
 
-            function type() {
-                if (index < text.length) {
-                    elementContainer.append(text.charAt(index));
-                    index++;
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
-                    setTimeout(type, 8); // Velocidad óptima de respuesta
-                } else {
-                    callback();
-                }
+            if (!domain || !email || !token || !issueId) return null;
+
+            try {
+                const b64Auth = btoa(`${email}:${token}`);
+                // Usamos un proxy CORS público para llamadas directas desde localhost/github pages a Atlassian
+                const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; 
+                const jiraUrl = `https://${domain}/rest/api/3/issue/${issueId}`;
+                
+                const response = await fetch(proxyUrl + jiraUrl, {
+                    headers: {
+                        "Authorization": `Basic ${b64Auth}`,
+                        "Accept": "application/json",
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+                
+                if (!response.ok) return null;
+                const data = await response.json();
+                return `[JIRA TICKET ${issueId}] Title: ${data.fields?.summary || ''}. Description: ${data.fields?.description?.content?.[0]?.content?.[0]?.text || 'No description'}. Status: ${data.fields?.status?.name || ''}`;
+            } catch (e) {
+                console.error("Error consultando Jira REST API:", e);
+                return null;
             }
-            type();
         }
 
         chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const text = userInput.value.trim();
+            let text = userInput.value.trim();
             if (!text) return;
 
             userInput.value = '';
             userInput.disabled = true;
             sendBtn.disabled = true;
 
-            displayMessage('user', text);
-            chatHistory.push({ role: 'user', content: text });
+            // 1. Inyectar contexto de Jira si está disponible en la configuración lateral
+            const jiraContext = await fetchJiraContext();
+            let finalUserPrompt = text;
+            if (jiraContext) {
+                finalUserPrompt = `${jiraContext}\n\nInstrucción de usuario sobre este ticket:\n${text}`;
+            }
 
-            // Indicador de Carga
+            displayMessage('user', text);
+            chatHistory.push({ role: 'user', content: finalUserPrompt });
+
             const loadingRow = document.createElement('div');
             loadingRow.className = 'w-full flex gap-4 py-4 justify-start';
-            loadingRow.innerHTML = `
-                <div class="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white">O</div>
-                <div class="text-sm text-gray-500 animate-pulse">Consultando nodo Qwen...</div>`;
+            loadingRow.innerHTML = `<div class="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">O</div><div class="text-sm text-gray-500 animate-pulse">Procesando comandos en tiempo real...</div>`;
             chatContainer.appendChild(loadingRow);
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
+            const selectedEngine = engineSelect.value;
+
             try {
-                const response = await fetch(WORKER_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: chatHistory })
-                });
+                let aiReply = "";
 
-                const data = await response.json();
-                loadingRow.remove();
-
-                if (data.choices && data.choices[0]) {
-                    const aiReply = data.choices[0].message.content;
-
-                    // Implementación de la fila de la IA para aplicar el efecto máquina de escribir
-                    const row = document.createElement('div');
-                    row.className = 'w-full flex gap-4 py-4 justify-start';
-                    row.innerHTML = `
-                        <div class="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">O</div>
-                        <div class="flex-1 text-[#ececec] text-[15px] leading-relaxed font-sans whitespace-pre-wrap"></div>`;
-                    chatContainer.appendChild(row);
-                    
-                    const textContainer = row.querySelector('div:nth-child(2)');
-
-                    typeWriter(aiReply, textContainer, () => {
-                        chatHistory.push({ role: 'assistant', content: aiReply });
-                        localStorage.setItem('ops_nexus_history', JSON.stringify(chatHistory));
-                        renderHistoryUI();
+                if (selectedEngine === 'qwen') {
+                    // EJECUCIÓN VÍA TU WORKER (Qwen)
+                    const response = await fetch(WORKER_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ messages: chatHistory })
                     });
-
+                    const data = await response.json();
+                    aiReply = data.choices?.[0]?.message?.content || 'Error procesando respuesta del Worker.';
                 } else {
-                    displayMessage('assistant', 'Error en el procesamiento interno del proxy.');
+                    // EJECUCIÓN DIRECTA A ANTHROPIC (Claude)
+                    const claudeKey = document.getElementById('claude-key').value.trim();
+                    if (!claudeKey) {
+                        aiReply = "Error: Introduce tu Claude API Key en la barra lateral para usar este motor.";
+                    } else {
+                        const response = await fetch('https://api.anthropic.com/v1/messages', {
+                            method: 'POST',
+                            headers: {
+                                'x-api-key': claudeKey,
+                                'anthropic-version': '2023-06-01',
+                                'content-type': 'application/json',
+                                'dangerously-allow-browser': 'true' // Nota: Requerido para llamadas directas client-side
+                            },
+                            body: JSON.stringify({
+                                model: 'claude-3-5-sonnet-20241022',
+                                max_tokens: 4096,
+                                messages: chatHistory.map(m => ({ role: m.role, content: m.content }))
+                            })
+                        });
+                        const data = await response.json();
+                        aiReply = data.content?.[0]?.text || 'Error procesando respuesta del motor de Anthropic.';
+                    }
                 }
+
+                loadingRow.remove();
+                displayMessage('assistant', aiReply);
+                chatHistory.push({ role: 'assistant', content: aiReply });
 
             } catch (error) {
                 loadingRow.remove();
-                displayMessage('assistant', 'Fallo crítico en la conexión con el Worker.');
+                displayMessage('assistant', 'Fallo crítico en el enrutamiento del pipeline.');
                 console.error(error);
             } finally {
                 userInput.disabled = false;
