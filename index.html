@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ops Nexus Proxy</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#212121] text-[#ececec] h-screen flex font-sans overflow-hidden">
+
+    <aside class="w-[260px] bg-[#171717] h-full flex flex-col justify-between p-3 hidden md:flex border-r border-[#2f2f2f]">
+        <div class="flex flex-col h-full overflow-hidden">
+            <button id="new-chat-btn" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium hover:bg-[#212121] transition text-left border border-[#424242] cursor-pointer shrink-0">
+                <span>Nuevo chat</span>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                </svg>
+            </button>
+            
+            <div class="pt-4 text-xs font-semibold text-gray-500 px-3 shrink-0">Historial Reciente</div>
+            <nav id="history-list" class="flex-1 overflow-y-auto no-scrollbar space-y-1 text-sm mt-2"></nav>
+        </div>
+
+        <div class="border-t border-[#2f2f2f] pt-2 shrink-0">
+            <div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#212121] cursor-pointer text-sm font-medium">
+                <div class="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-xs font-bold text-white">O</div>
+                <span>Ops Nexus Admin</span>
+            </div>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col justify-between h-full relative">
+        <header class="w-full h-14 border-b border-[#2f2f2f] flex items-center justify-between px-4 md:justify-center bg-[#212121] shrink-0">
+            <span class="text-sm font-medium text-gray-300 md:text-base">ops-nexus-proxy (Qwen Engine)</span>
+            <div class="w-6 h-6 rounded-full bg-emerald-600 flex md:hidden items-center justify-center text-[10px] font-bold text-white">O</div>
+        </header>
+
+        <main id="chat-container" class="flex-1 overflow-y-auto no-scrollbar py-4 space-y-6 w-full max-w-3xl mx-auto px-4 md:px-0"></main>
+
+        <footer class="w-full max-w-3xl mx-auto px-4 pb-6 bg-gradient-to-t from-[#212121] via-[#212121] to-transparent shrink-0">
+            <form id="chat-form" class="relative flex items-center bg-[#2f2f2f] rounded-2xl border border-[#424242] focus-within:border-[#565656] shadow-xl px-4 py-3">
+                <input type="text" id="user-input" placeholder="Escribe una instrucción o comando para Qwen..." autocomplete="off" required
+                    class="w-full bg-transparent text-[#ececec] text-sm focus:outline-none pr-12 placeholder-gray-500">
+                <button type="submit" id="send-btn" class="absolute right-3 bg-[#ececec] hover:bg-white text-[#212121] rounded-full p-1.5 transition disabled:opacity-30 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                    </svg>
+                </button>
+            </form>
+            <p class="text-center text-[11px] text-gray-500 mt-2">Instancia Proxy aislada y segura. Revisa la sintaxis de los scripts generados.</p>
+        </footer>
+    </div>
+
+    <script>
+        const WORKER_URL = 'https://proud-breeze-0411.atrumin16.workers.dev/';
+        
+        const chatContainer = document.getElementById('chat-container');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const historyList = document.getElementById('history-list');
+        const newChatBtn = document.getElementById('new-chat-btn');
+
+        let chatHistory = JSON.parse(localStorage.getItem('ops_nexus_history')) || [];
+
+        // Inicialización Avanzada
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHistoryUI();
+            if (chatHistory.length > 0) {
+                chatHistory.forEach(msg => displayMessage(msg.role, msg.content));
+            } else {
+                showWelcomeScreen();
+            }
+        });
+
+        newChatBtn.addEventListener('click', () => {
+            chatHistory = [];
+            localStorage.removeItem('ops_nexus_history');
+            chatContainer.innerHTML = '';
+            showWelcomeScreen();
+        });
+
+        function showWelcomeScreen() {
+            chatContainer.innerHTML = `
+                <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center pt-32">
+                    <div class="w-12 h-12 rounded-full bg-[#2f2f2f] border border-[#424242] flex items-center justify-center text-xl font-bold mb-4 text-emerald-400">O</div>
+                    <h2 class="text-2xl font-medium text-[#ececec]">¿Qué entorno vamos a automatizar hoy?</h2>
+                </div>`;
+        }
+
+        // Parseador Avanzado de Markdown (Código en Bloque)
+        function formatMarkdown(text) {
+            const codeBlockRegex = /```([\s\S]*?)```/g;
+            return text.replace(codeBlockRegex, (match, code) => {
+                return `<div class="bg-[#1a1a1a] border border-[#2f2f2f] rounded-lg my-3 font-mono text-sm text-emerald-400 p-4 overflow-x-auto relative">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-2 select-none">CODE BLOCK</div>
+                    <code>${escapeHtml(code.trim())}</code>
+                </div>`;
+            });
+        }
+
+        function escapeHtml(string) {
+            return string.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function renderHistoryUI() {
+            historyList.innerHTML = '';
+            const userPrompts = chatHistory.filter(m => m.role === 'user');
+            userPrompts.slice(-5).reverse().forEach(msg => {
+                const item = document.createElement('div');
+                item.className = 'px-3 py-2 rounded-lg text-gray-400 hover:bg-[#212121] hover:text-white cursor-pointer truncate';
+                item.textContent = msg.content;
+                historyList.appendChild(item);
+            });
+        }
+
+        function displayMessage(role, text) {
+            const welcome = document.getElementById('welcome-screen');
+            if (welcome) welcome.remove();
+
+            const row = document.createElement('div');
+            row.className = `w-full flex gap-4 py-4 ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+            if (role === 'user') {
+                row.innerHTML = `<div class="max-w-[75%] bg-[#2f2f2f] text-[#ececec] px-4 py-2 rounded-2xl text-[15px] leading-relaxed">${escapeHtml(text)}</div>`;
+            } else {
+                row.innerHTML = `
+                    <div class="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">O</div>
+                    <div class="flex-1 text-[#ececec] text-[15px] leading-relaxed markdown-body">${formatMarkdown(text)}</div>`;
+            }
+            chatContainer.appendChild(row);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Efecto de Escritura (Simulated Streaming)
+        function typeWriter(text, elementContainer, callback) {
+            let index = 0;
+            elementContainer.innerHTML = '';
+            
+            // Si el texto contiene bloques de código, formateamos directo para evitar romper etiquetas HTML mientras escribe
+            if(text.includes('```')) {
+                elementContainer.innerHTML = formatMarkdown(text);
+                callback();
+                return;
+            }
+
+            function type() {
+                if (index < text.length) {
+                    elementContainer.append(text.charAt(index));
+                    index++;
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                    setTimeout(type, 8); // Velocidad óptima de respuesta
+                } else {
+                    callback();
+                }
+            }
+            type();
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            userInput.value = '';
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+
+            displayMessage('user', text);
+            chatHistory.push({ role: 'user', content: text });
+
+            // Indicador de Carga
+            const loadingRow = document.createElement('div');
+            loadingRow.className = 'w-full flex gap-4 py-4 justify-start';
+            loadingRow.innerHTML = `
+                <div class="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white">O</div>
+                <div class="text-sm text-gray-500 animate-pulse">Consultando nodo Qwen...</div>`;
+            chatContainer.appendChild(loadingRow);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch(WORKER_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: chatHistory })
+                });
+
+                const data = await response.json();
+                loadingRow.remove();
+
+                if (data.choices && data.choices[0]) {
+                    const aiReply = data.choices[0].message.content;
+
+                    // Implementación de la fila de la IA para aplicar el efecto máquina de escribir
+                    const row = document.createElement('div');
+                    row.className = 'w-full flex gap-4 py-4 justify-start';
+                    row.innerHTML = `
+                        <div class="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">O</div>
+                        <div class="flex-1 text-[#ececec] text-[15px] leading-relaxed font-sans whitespace-pre-wrap"></div>`;
+                    chatContainer.appendChild(row);
+                    
+                    const textContainer = row.querySelector('div:nth-child(2)');
+
+                    typeWriter(aiReply, textContainer, () => {
+                        chatHistory.push({ role: 'assistant', content: aiReply });
+                        localStorage.setItem('ops_nexus_history', JSON.stringify(chatHistory));
+                        renderHistoryUI();
+                    });
+
+                } else {
+                    displayMessage('assistant', 'Error en el procesamiento interno del proxy.');
+                }
+
+            } catch (error) {
+                loadingRow.remove();
+                displayMessage('assistant', 'Fallo crítico en la conexión con el Worker.');
+                console.error(error);
+            } finally {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
