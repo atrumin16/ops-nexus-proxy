@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,49 +10,106 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     
     <style>
+        /* Essentialist Dark Mode Ecosystem */
+        :root {
+            --bg-primary: #212121;
+            --bg-secondary: #171717;
+            --bg-tertiary: #2f2f2f;
+            --accent: #10b981; /* Emerald 500 */
+            --text-main: #ececec;
+            --text-muted: #a1a1aa;
+        }
+        
+        body { background-color: var(--bg-primary); color: var(--text-main); }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Code Highlighting & Typography */
         .code-highlight { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+        pre code { white-space: pre-wrap; word-break: break-word; }
+        
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        
+        /* Custom Scrollbar for Main Chat */
+        #chat-container::-webkit-scrollbar { width: 6px; }
+        #chat-container::-webkit-scrollbar-track { background: transparent; }
+        #chat-container::-webkit-scrollbar-thumb { background: #424242; border-radius: 3px; }
+        #chat-container::-webkit-scrollbar-thumb:hover { background: #525252; }
     </style>
 </head>
-<body class="bg-[#212121] text-[#ececec] h-screen flex font-sans overflow-hidden select-none">
+<body class="h-screen flex font-sans overflow-hidden select-none antialiased">
 
-    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+    <!-- TOAST NOTIFICATION ENGINE -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[100] space-y-2 pointer-events-none w-80"></div>
 
-    <aside class="w-[320px] bg-[#171717] h-full flex flex-col justify-between p-3 hidden md:flex border-r border-[#2f2f2f] shrink-0 z-20">
+    <!-- SIDEBAR: CONTROL PLANE -->
+    <aside class="w-[320px] bg-[#171717] h-full flex flex-col justify-between p-3 hidden md:flex border-r border-[#2f2f2f] shrink-0 z-20 transition-all duration-300">
         <div class="flex flex-col h-full overflow-hidden">
             
-            <button id="new-chat-btn" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-[#212121] transition border border-[#424242] cursor-pointer shrink-0 shadow-sm">
-                <span class="flex items-center gap-2">
+            <!-- New Session Action -->
+            <button id="new-chat-btn" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-[#212121] transition border border-[#424242] cursor-pointer shrink-0 shadow-sm group">
+                <span class="flex items-center gap-2 text-gray-300 group-hover:text-white">
                     <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Nuevo Entorno de Trabajo
+                    <span data-i18n="new_workspace">New Workspace</span>
                 </span>
-                <kbd class="text-[10px] bg-[#2f2f2f] px-1.5 py-0.5 rounded border border-gray-600 text-gray-400">Ctrl + N</kbd>
+                <kbd class="text-[10px] bg-[#2f2f2f] px-1.5 py-0.5 rounded border border-gray-600 text-gray-400">Ctrl+N</kbd>
             </button>
 
+            <!-- Core Configuration Matrix -->
             <div class="mt-4 shrink-0 bg-[#212121] p-3 rounded-xl border border-[#2f2f2f] space-y-3">
+                <!-- Language Selector -->
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 block mb-1 tracking-wider uppercase">Orquestador Base</label>
-                    <select id="engine-select" class="w-full bg-[#171717] text-xs text-[#ececec] border border-[#424242] rounded-lg px-2 py-2 focus:outline-none focus:border-emerald-500 cursor-pointer">
-                        <option value="qwen">Qwen 32B Core (Default Proxy)</option>
-                        <option value="claude">Claude 3.5 Sonnet (Direct API)</option>
+                    <label class="text-[10px] font-bold text-gray-500 block mb-1 tracking-wider uppercase" data-i18n="ui_language">Interface Language</label>
+                    <select id="lang-select" class="w-full bg-[#171717] text-xs text-[#ececec] border border-[#424242] rounded-lg px-2 py-2 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                        <option value="en">English (US)</option>
+                        <option value="es">Español</option>
+                        <option value="ca">Català</option>
+                        <option value="pt">Português</option>
+                        <option value="de">Deutsch</option>
+                        <option value="fr">Français</option>
                     </select>
                 </div>
+
+                <!-- Model Router -->
                 <div>
-                    <label class="text-[10px] font-bold text-gray-500 block mb-1 tracking-wider uppercase">Filtro de Comportamiento (System Prompt)</label>
-                    <select id="prompt-preset" class="w-full bg-[#171717] text-xs text-[#ececec] border border-[#424242] rounded-lg px-2 py-2 focus:outline-none focus:border-emerald-500 cursor-pointer">
-                        <option value="sysadmin">Perfil: SysAdmin / Devops Avanzado</option>
-                        <option value="sec">Perfil: Auditor de Seguridad / Blockchain Forensics</option>
-                        <option value="doc">Perfil: Redactor de Documentación Técnica</option>
+                    <label class="text-[10px] font-bold text-gray-500 block mb-1 tracking-wider uppercase" data-i18n="core_orchestrator">Core Orchestrator</label>
+                    <select id="engine-select" class="w-full bg-[#171717] text-xs text-[#ececec] border border-[#424242] rounded-lg px-2 py-2 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                        <option value="qwen">Qwen 32B (Cloudflare Proxy)</option>
+                        <option value="claude">Claude 3.5 Sonnet (Direct API)</option>
+                        <option value="openai">OpenAI GPT-4o (Direct API)</option>
                     </select>
+                </div>
+
+                <!-- System Prompt Preset -->
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 block mb-1 tracking-wider uppercase" data-i18n="behavior_filter">Behavior Filter</label>
+                    <select id="prompt-preset" class="w-full bg-[#171717] text-xs text-[#ececec] border border-[#424242] rounded-lg px-2 py-2 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                        <option value="sysadmin">SysAdmin / DevOps Architect</option>
+                        <option value="sec">Security Auditor / Forensics</option>
+                        <option value="doc">Technical Documentation Writer</option>
+                    </select>
+                </div>
+
+                <!-- Stream Translation Toggle -->
+                <div class="flex items-center justify-between pt-1">
+                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider" data-i18n="auto_translate">Auto-Translate Stream</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="auto-translate-toggle" class="sr-only peer">
+                        <div class="w-9 h-5 bg-[#2f2f2f] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
                 </div>
             </div>
 
+            <!-- Expandable Integration Modules -->
             <div class="mt-4 space-y-1 overflow-y-auto no-scrollbar flex-1 pr-1">
                 
+                <!-- Credentials: Anthropic -->
                 <div id="claude-sec" class="hidden border border-[#2f2f2f] rounded-lg bg-[#212121] overflow-hidden transition-all duration-200">
-                    <button class="w-full px-3 py-2 text-left text-xs font-bold text-gray-400 bg-[#1a1a1a] flex justify-between items-center" onclick="toggleSection('claude-inputs')">
-                        <span>🔑 CREDENCIALES ANTHROPIC</span>
+                    <button class="w-full px-3 py-2 text-left text-xs font-bold text-gray-400 bg-[#1a1a1a] flex justify-between items-center hover:text-white transition" onclick="toggleSection('claude-inputs')">
+                        <span>🔑 ANTHROPIC CREDENTIALS</span>
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div id="claude-inputs" class="p-3 space-y-2">
@@ -60,65 +117,100 @@
                     </div>
                 </div>
 
-                <div class="border border-[#2f2f2f] rounded-lg bg-[#212121] overflow-hidden">
-                    <button class="w-full px-3 py-2 text-left text-xs font-bold text-gray-400 bg-[#1a1a1a] flex justify-between items-center" onclick="toggleSection('jira-inputs')">
-                        <span>👔 JIRA WORKSPACE INTEGRATION</span>
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <!-- Credentials: OpenAI -->
+                <div id="openai-sec" class="hidden border border-[#2f2f2f] rounded-lg bg-[#212121] overflow-hidden transition-all duration-200">
+                    <button class="w-full px-3 py-2 text-left text-xs font-bold text-gray-400 bg-[#1a1a1a] flex justify-between items-center hover:text-white transition" onclick="toggleSection('openai-inputs')">
+                        <span>🔑 OPENAI CREDENTIALS</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div id="jira-inputs" class="p-3 space-y-2 hidden">
-                        <input type="text" id="jira-domain" placeholder="instancia.atlassian.net" class="w-full bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none">
-                        <input type="text" id="jira-email" placeholder="usuario@empresa.com" class="w-full bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none">
-                        <input type="password" id="jira-token" placeholder="Atlassian API Token" class="w-full bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none font-mono">
-                        <input type="text" id="jira-issue" placeholder="ID Ticket (ej: OPS-404)" class="w-full bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none font-mono">
-                        <button type="button" onclick="testJiraConnection()" class="w-full bg-[#2f2f2f] hover:bg-[#383838] border border-[#424242] py-1 text-[11px] rounded transition font-medium cursor-pointer">Validar Enlace</button>
+                    <div id="openai-inputs" class="p-3 space-y-2">
+                        <input type="password" id="openai-key" placeholder="sk-proj-..." class="w-full bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none focus:border-emerald-500 font-mono">
                     </div>
                 </div>
 
+                <!-- Credentials: DeepL -->
+                <div class="border border-[#2f2f2f] rounded-lg bg-[#212121] overflow-hidden">
+                    <button class="w-full px-3 py-2 text-left text-xs font-bold text-gray-400 bg-[#1a1a1a] flex justify-between items-center hover:text-white transition" onclick="toggleSection('deepl-inputs')">
+                        <span>🌐 DEEPL TRANSLATION API</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div id="deepl-inputs" class="p-3 space-y-2 hidden">
+                        <input type="password" id="deepl-key" placeholder="DeepL Auth Key" class="w-full bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none focus:border-emerald-500 font-mono">
+                        <p class="text-[10px] text-gray-500 leading-tight">Required for high-fidelity stream translation.</p>
+                    </div>
+                </div>
+
+                <!-- Jira Workspace Integration -->
+                <div class="border border-[#2f2f2f] rounded-lg bg-[#212121] overflow-hidden mt-2">
+                    <button class="w-full px-3 py-2 text-left text-xs font-bold text-gray-400 bg-[#1a1a1a] flex justify-between items-center hover:text-white transition" onclick="toggleSection('jira-inputs')">
+                        <span>👔 JIRA WORKSPACE SYNC</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div id="jira-inputs" class="p-3 space-y-2 hidden">
+                        <input type="text" id="jira-domain" placeholder="instance.atlassian.net" class="w-full bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none">
+                        <input type="email" id="jira-email" placeholder="user@company.com" class="w-full bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none">
+                        <input type="password" id="jira-token" placeholder="Atlassian API Token" class="w-full bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none font-mono">
+                        <div class="flex gap-2">
+                            <input type="text" id="jira-issue" placeholder="OPS-404" class="flex-1 bg-[#171717] border border-[#424242] rounded p-2 text-xs focus:outline-none font-mono">
+                            <label class="flex items-center gap-1 text-[10px] text-gray-400 cursor-pointer whitespace-nowrap select-none">
+                                <input type="checkbox" id="jira-sync-toggle" class="accent-emerald-500"> Sync
+                            </label>
+                        </div>
+                        <button type="button" onclick="testJiraConnection()" class="w-full bg-[#2f2f2f] hover:bg-[#383838] border border-[#424242] py-1.5 text-[11px] rounded transition font-medium cursor-pointer text-gray-300">Validate Handshake</button>
+                    </div>
+                </div>
+
+                <!-- Persistent History List -->
                 <div class="pt-4">
-                    <span class="text-[10px] font-bold text-gray-500 block px-3 mb-2 tracking-wider uppercase">Historial Persistente (LocalDB)</span>
+                    <span class="text-[10px] font-bold text-gray-500 block px-3 mb-2 tracking-wider uppercase" data-i18n="persistent_history">Persistent History (LocalDB)</span>
                     <div id="db-history-list" class="space-y-1"></div>
                 </div>
             </div>
         </div>
 
+        <!-- Footer Actions -->
         <div class="border-t border-[#2f2f2f] pt-3 space-y-2 shrink-0">
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="exportSessionData('md')" class="text-center bg-[#212121] hover:bg-[#2f2f2f] border border-[#424242] text-[11px] py-1.5 rounded font-medium cursor-pointer transition flex items-center justify-center gap-1">
-                    💾 Exportar MD
+                <button onclick="exportSessionData('md')" class="text-center bg-[#212121] hover:bg-[#2f2f2f] border border-[#424242] text-[11px] py-1.5 rounded font-medium cursor-pointer transition flex items-center justify-center gap-1 text-gray-300">
+                    💾 Export MD
                 </button>
-                <button onclick="exportSessionData('json')" class="text-center bg-[#212121] hover:bg-[#2f2f2f] border border-[#424242] text-[11px] py-1.5 rounded font-medium cursor-pointer transition flex items-center justify-center gap-1">
-                    📦 Exportar JSON
+                <button onclick="exportSessionData('json')" class="text-center bg-[#212121] hover:bg-[#2f2f2f] border border-[#424242] text-[11px] py-1.5 rounded font-medium cursor-pointer transition flex items-center justify-center gap-1 text-gray-300">
+                    📦 Export JSON
                 </button>
             </div>
             <div class="flex items-center gap-3 px-3 py-2 rounded-xl bg-[#212121] border border-[#2f2f2f]">
                 <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-xs font-bold text-white shadow-sm">OPS</div>
                 <div class="truncate">
                     <p class="text-xs font-semibold text-gray-200">Ops Nexus System</p>
-                    <p class="text-[10px] text-gray-500 font-mono">v2.1.0-Stable</p>
+                    <p class="text-[10px] text-gray-500 font-mono">v3.0.0-Enterprise</p>
                 </div>
             </div>
         </div>
     </aside>
 
+    <!-- MAIN CONTENT AREA -->
     <div class="flex-1 flex flex-col justify-between h-full relative bg-[#212121]">
         
+        <!-- Header Status Bar -->
         <header class="w-full h-14 border-b border-[#2f2f2f] flex items-center justify-between px-6 bg-[#212121] shrink-0 z-10 shadow-sm">
             <div class="flex items-center gap-3">
                 <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                 <span id="active-engine-badge" class="text-xs font-mono font-medium text-gray-300">CORE STATUS: STABLE // MODEL: QWEN-32B</span>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="clearCurrentCanvas()" class="p-1.5 rounded-lg text-gray-400 hover:bg-[#2f2f2f] hover:text-white transition cursor-pointer" title="Limpiar Consola Actual">
+                <button onclick="clearCurrentCanvas()" class="p-1.5 rounded-lg text-gray-400 hover:bg-[#2f2f2f] hover:text-white transition cursor-pointer" title="Clear Console">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
             </div>
         </header>
 
-        <main id="chat-container" class="flex-1 overflow-y-auto no-scrollbar py-6 space-y-6 w-full max-w-3xl mx-auto px-4 md:px-0 scroll-smooth"></main>
+        <!-- Chat Canvas -->
+        <main id="chat-container" class="flex-1 overflow-y-auto py-6 space-y-6 w-full max-w-3xl mx-auto px-4 md:px-0 scroll-smooth"></main>
 
+        <!-- Input Area -->
         <footer class="w-full max-w-3xl mx-auto px-4 pb-6 bg-gradient-to-t from-[#212121] via-[#212121] to-transparent shrink-0">
             <form id="chat-form" class="relative flex items-center bg-[#2f2f2f] rounded-2xl border border-[#424242] focus-within:border-[#565656] shadow-2xl px-4 py-3.5 transition-all">
-                <input type="text" id="user-input" placeholder="Introduce logs, scripts o comandos para procesar..." autocomplete="off" required
+                <input type="text" id="user-input" placeholder="Enter logs, scripts, or commands..." autocomplete="off" required
                     class="w-full bg-transparent text-[#ececec] text-[14px] focus:outline-none pr-14 placeholder-gray-500 tracking-wide font-normal">
                 
                 <div class="absolute right-3 flex items-center gap-1.5">
@@ -128,53 +220,173 @@
                 </div>
             </form>
             <div class="flex justify-between items-center px-2 mt-2 text-[10px] text-gray-500 font-mono">
-                <span>Atajos: Enter para enviar // Ctrl + N para limpiar entorno</span>
-                <span>Cifrado Local Activo (E2E Client Data)</span>
+                <span data-i18n="shortcuts_info">Shortcuts: Enter to Send // Ctrl+N to Clear</span>
+                <span>E2E Client-Side Encryption Active</span>
             </div>
         </footer>
     </div>
 
+    <!-- CORE APPLICATION LOGIC -->
     <script>
-        const PROXY_WORKER_URL = 'https://proud-breeze-0411.atrumin16.workers.dev/';
-        
-        // Elementos del DOM global
-        const chatContainer = document.getElementById('chat-container');
-        const chatForm = document.getElementById('chat-form');
-        const userInput = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const engineSelect = document.getElementById('engine-select');
-        const promptPreset = document.getElementById('prompt-preset');
-        const activeEngineBadge = document.getElementById('active-engine-badge');
-        const dbHistoryList = document.getElementById('db-history-list');
+        /**
+         * OPS NEXUS PROXY - ENTERPRISE CORE
+         * Single-file architecture with IndexedDB, Multi-Provider Routing, and i18n
+         */
 
+        // --- CONFIGURATION & CONSTANTS ---
+        const PROXY_WORKER_URL = 'https://proud-breeze-0411.atrumin16.workers.dev/';
+        const DB_NAME = 'OpsNexusStorage_V3';
+        const DB_VERSION = 1;
+
+        // Localization Dictionary
+        const I18N = {
+            en: {
+                new_workspace: "New Workspace", ui_language: "Interface Language", core_orchestrator: "Core Orchestrator",
+                behavior_filter: "Behavior Filter", auto_translate: "Auto-Translate Stream", persistent_history: "Persistent History (LocalDB)",
+                shortcuts_info: "Shortcuts: Enter to Send // Ctrl+N to Clear", placeholder_input: "Enter logs, scripts, or commands...",
+                welcome_title: "Ops Nexus Architecture Active", welcome_desc: "Isolated orchestration instance. Deterministic generation of documentation and scripts via optimized models.",
+                toast_session_restored: "Session restored successfully", toast_session_deleted: "Session deleted from database",
+                toast_copied: "Code copied to clipboard", toast_downloaded: "Script downloaded securely",
+                toast_no_data: "No data in current session", toast_console_reset: "Work console reset",
+                toast_jira_injected: "Jira ticket context injected into payload", toast_processing: "Processing Pipeline...",
+                error_network: "Network Node Failure: ", error_claude_key: "CRITICAL: Claude selected but Anthropic API key is missing.",
+                error_openai_key: "CRITICAL: OpenAI selected but API key is missing.", jira_validating: "Initiating Atlassian handshake...",
+                jira_success: "Link established. Jira data mapped.", jira_fail: "Handshake failed. Check Jira credentials."
+            },
+            es: {
+                new_workspace: "Nuevo Entorno", ui_language: "Idioma de Interfaz", core_orchestrator: "Orquestador Base",
+                behavior_filter: "Filtro de Comportamiento", auto_translate: "Traducción Automática", persistent_history: "Historial Persistente (LocalDB)",
+                shortcuts_info: "Atajos: Enter enviar // Ctrl+N limpiar", placeholder_input: "Introduce logs, scripts o comandos...",
+                welcome_title: "Arquitectura Ops Nexus Activa", welcome_desc: "Instancia de orquestación aislada. Generación determinista de documentación y scripts.",
+                toast_session_restored: "Sesión restaurada correctamente", toast_session_deleted: "Sesión eliminada de la base de datos",
+                toast_copied: "Código copiado al portapapeles", toast_downloaded: "Script descargado de forma segura",
+                toast_no_data: "No hay datos en la sesión actual", toast_console_reset: "Consola de trabajo restablecida",
+                toast_jira_injected: "Contexto de ticket Jira inyectado", toast_processing: "Procesando Pipeline...",
+                error_network: "Fallo de comunicación en el Nodo: ", error_claude_key: "ERROR CRÍTICO: Clave API de Anthropic vacía.",
+                error_openai_key: "ERROR CRÍTICO: Clave API de OpenAI vacía.", jira_validating: "Iniciando validación con Atlassian...",
+                jira_success: "Enlace establecido. Datos mapeados.", jira_fail: "Validación fallida. Revisa credenciales."
+            },
+            ca: {
+                new_workspace: "Nou Entorn", ui_language: "Idioma d'Interfície", core_orchestrator: "Orquestrador Base",
+                behavior_filter: "Filtre de Comportament", auto_translate: "Traducció Automàtica", persistent_history: "Historial Persistent (LocalDB)",
+                shortcuts_info: "Dreceres: Enter enviar // Ctrl+N netejar", placeholder_input: "Introdueix logs, scripts o comandes...",
+                welcome_title: "Arquitectura Ops Nexus Activa", welcome_desc: "Instància d'orquestració aïllada. Generació determinista de documentació.",
+                toast_session_restored: "Sessió restaurada correctament", toast_session_deleted: "Sessió eliminada de la base de dades",
+                toast_copied: "Codi copiat al porta-retalls", toast_downloaded: "Script descarregat de forma segura",
+                toast_no_data: "No hi ha dades a la sessió actual", toast_console_reset: "Consola de treball restablerta",
+                toast_jira_injected: "Context de ticket Jira injectat", toast_processing: "Processant Pipeline...",
+                error_network: "Fallada de comunicació al Node: ", error_claude_key: "ERROR CRÍTIC: Clau API d'Anthropic buida.",
+                error_openai_key: "ERROR CRÍTIC: Clau API d'OpenAI buida.", jira_validating: "Iniciant validació amb Atlassian...",
+                jira_success: "Enllaç establert. Dades mapejades.", jira_fail: "Validació fallida. Revisa credencials."
+            },
+            pt: {
+                new_workspace: "Novo Ambiente", ui_language: "Idioma da Interface", core_orchestrator: "Orquestrador Base",
+                behavior_filter: "Filtro de Comportamento", auto_translate: "Tradução Automática", persistent_history: "Histórico Persistente (LocalDB)",
+                shortcuts_info: "Atalhos: Enter enviar // Ctrl+N limpar", placeholder_input: "Insira logs, scripts ou comandos...",
+                welcome_title: "Arquitetura Ops Nexus Ativa", welcome_desc: "Instância de orquestração isolada. Geração determinística de documentação.",
+                toast_session_restored: "Sessão restaurada com sucesso", toast_session_deleted: "Sessão excluída do banco de dados",
+                toast_copied: "Código copiado para a área de transferência", toast_downloaded: "Script baixado com segurança",
+                toast_no_data: "Sem dados na sessão atual", toast_console_reset: "Console de trabalho redefinido",
+                toast_jira_injected: "Contexto do ticket Jira injetado", toast_processing: "Processando Pipeline...",
+                error_network: "Falha de comunicação no Nó: ", error_claude_key: "ERRO CRÍTICO: Chave API da Anthropic vazia.",
+                error_openai_key: "ERRO CRÍTICO: Chave API da OpenAI vazia.", jira_validating: "Iniciando validação com Atlassian...",
+                jira_success: "Link estabelecido. Dados mapeados.", jira_fail: "Validação falhou. Verifique credenciais."
+            },
+            de: {
+                new_workspace: "Neuer Arbeitsbereich", ui_language: "Oberflächensprache", core_orchestrator: "Kern-Orchestrator",
+                behavior_filter: "Verhaltensfilter", auto_translate: "Auto-Übersetzung", persistent_history: "Persistenter Verlauf (LocalDB)",
+                shortcuts_info: "Tastenkürzel: Enter senden // Ctrl+N löschen", placeholder_input: "Logs, Skripte oder Befehle eingeben...",
+                welcome_title: "Ops Nexus Architektur Aktiv", welcome_desc: "Isolierte Orchestrierungsinstanz. Deterministische Generierung von Dokumentation.",
+                toast_session_restored: "Sitzung erfolgreich wiederhergestellt", toast_session_deleted: "Sitzung aus Datenbank gelöscht",
+                toast_copied: "Code in Zwischenablage kopiert", toast_downloaded: "Skript sicher heruntergeladen",
+                toast_no_data: "Keine Daten in aktueller Sitzung", toast_console_reset: "Arbeitskonsole zurückgesetzt",
+                toast_jira_injected: "Jira-Ticketkontext injiziert", toast_processing: "Pipeline wird verarbeitet...",
+                error_network: "Netzwerkknoten-Fehler: ", error_claude_key: "KRITISCHER FEHLER: Anthropic API-Schlüssel fehlt.",
+                error_openai_key: "KRITISCHER FEHLER: OpenAI API-Schlüssel fehlt.", jira_validating: "Atlassian-Handshake wird initiiert...",
+                jira_success: "Verbindung hergestellt. Daten gemappt.", jira_fail: "Handshake fehlgeschlagen. Prüfen Sie Anmeldedaten."
+            },
+            fr: {
+                new_workspace: "Nouvel Espace", ui_language: "Langue de l'interface", core_orchestrator: "Orchestrateur Core",
+                behavior_filter: "Filtre de Comportement", auto_translate: "Traduction Auto", persistent_history: "Historique Persistant (LocalDB)",
+                shortcuts_info: "Raccourcis: Entrée envoyer // Ctrl+N effacer", placeholder_input: "Entrez logs, scripts ou commandes...",
+                welcome_title: "Architecture Ops Nexus Active", welcome_desc: "Instance d'orchestration isolée. Génération déterministe de documentation.",
+                toast_session_restored: "Session restaurée avec succès", toast_session_deleted: "Session supprimée de la base de données",
+                toast_copied: "Code copié dans le presse-papiers", toast_downloaded: "Script téléchargé en toute sécurité",
+                toast_no_data: "Aucune donnée dans la session actuelle", toast_console_reset: "Console de travail réinitialisée",
+                toast_jira_injected: "Contexte du ticket Jira injecté", toast_processing: "Traitement du Pipeline...",
+                error_network: "Échec du nœud réseau : ", error_claude_key: "ERREUR CRITIQUE : Clé API Anthropic manquante.",
+                error_openai_key: "ERREUR CRITIQUE : Clé API OpenAI manquante.", jira_validating: "Initialisation de la liaison Atlassian...",
+                jira_success: "Lien établi. Données mappées.", jira_fail: "Échec de la liaison. Vérifiez les identifiants."
+            }
+        };
+
+        const SYSTEM_PRESETS = {
+            sysadmin: "You are Ops Nexus AI. A Senior DevOps Architect and Linux/Windows SysAdmin. Generate exclusively clean, modular, robust scripts and production-ready commands. Omit polite introductions or generic explanations.",
+            sec: "You are an IT Security Auditor and Systems Forensics Analyst. Analyze logs, network traces, and smart contracts for vulnerabilities, memory leaks, or exploits. Return cold, technical, and mathematical executive summaries.",
+            doc: "You are a Technical Infrastructure Writer. Transform technical specs, console outputs, or raw JSON into structured technical documentation following corporate Markdown standards."
+        };
+
+        // --- STATE MANAGEMENT ---
         let chatHistory = [];
         let indexedDatabase = null;
         let currentSessionId = null;
+        let currentLang = 'en';
 
-        // SYSTEM PROMPT PRESETS DEFINITIVOS
-        const SYSTEM_PRESETS = {
-            sysadmin: "Eres Ops Nexus AI. Un Arquitecto DevOps y Administrador de Sistemas Linux/Windows Senior. Genera exclusivamente scripts limpios, modulares, robustos y comandos listos para producción. Omita introducciones corteses o explicaciones genéricas.",
-            sec: "Eres un Auditor de Seguridad Informática y Analista Forense de Sistemas. Analiza logs, trazas de red y contratos inteligentes en busca de vulnerabilidades, fugas de memoria o exploits. Devuelve resúmenes ejecutivos fríos, técnicos y matemáticos.",
-            doc: "Eres un Redactor Técnico de Infraestructura. Transforma especificaciones técnicas, salidas de consola o JSON crudos en documentación técnica estructurada bajo el estándar Markdown corporativo."
+        // DOM Elements Cache
+        const els = {
+            chatContainer: document.getElementById('chat-container'),
+            chatForm: document.getElementById('chat-form'),
+            userInput: document.getElementById('user-input'),
+            sendBtn: document.getElementById('send-btn'),
+            engineSelect: document.getElementById('engine-select'),
+            promptPreset: document.getElementById('prompt-preset'),
+            activeEngineBadge: document.getElementById('active-engine-badge'),
+            dbHistoryList: document.getElementById('db-history-list'),
+            langSelect: document.getElementById('lang-select'),
+            autoTranslateToggle: document.getElementById('auto-translate-toggle')
         };
 
-        // INITIALIZATION ROUTINE (IndexedDB + Event Listeners)
+        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', async () => {
             currentSessionId = 'session_' + Date.now();
             await initLocalDatabase();
             loadSavedConfig();
+            applyLanguage(currentLang);
             showInitialCanvas();
             setupGlobalHotkeys();
         });
 
-        // INDEXEDDB ENGINE (Arquitectura de almacenamiento local persistente)
+        // --- LOCALIZATION ENGINE ---
+        function applyLanguage(lang) {
+            currentLang = lang;
+            const dict = I18N[lang] || I18N.en;
+            
+            // Update static elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.textContent = dict[key];
+            });
+
+            // Update dynamic placeholders
+            els.userInput.placeholder = dict.placeholder_input || "Enter command...";
+            
+            // Persist preference
+            localStorage.setItem('nexus_pref_lang', lang);
+        }
+
+        els.langSelect.addEventListener('change', (e) => applyLanguage(e.target.value));
+
+        // --- INDEXEDDB PERSISTENCE LAYER ---
         function initLocalDatabase() {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open('OpsNexusStorage', 1);
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains('sessions')) {
-                        db.objectStoreStore.createStore = db.createObjectStore('sessions', { keyPath: 'id' });
+                        db.createObjectStore('sessions', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('config')) {
+                        db.createObjectStore('config', { keyPath: 'key' });
                     }
                 };
                 request.onsuccess = (e) => {
@@ -182,7 +394,7 @@
                     refreshHistoryFromDB();
                     resolve();
                 };
-                request.onerror = () => reject();
+                request.onerror = () => reject("IndexedDB initialization failed");
             });
         }
 
@@ -191,7 +403,7 @@
             const transaction = indexedDatabase.transaction(['sessions'], 'readwrite');
             const store = transaction.objectStore('sessions');
             const userMessages = chatHistory.filter(m => m.role === 'user');
-            const previewText = userMessages.length > 0 ? userMessages[0].content.substring(0, 30) + '...' : 'Sesión técnica vacía';
+            const previewText = userMessages.length > 0 ? userMessages[0].content.substring(0, 30) + '...' : 'Empty technical session';
             
             store.put({
                 id: currentSessionId,
@@ -205,7 +417,7 @@
         function refreshHistoryFromDB() {
             if (!indexedDatabase) return;
             const store = indexedDatabase.transaction(['sessions'], 'readonly').objectStore('sessions');
-            dbHistoryList.innerHTML = '';
+            els.dbHistoryList.innerHTML = '';
             
             store.openCursor(null, 'prev').onsuccess = (e) => {
                 const cursor = e.target.result;
@@ -217,7 +429,7 @@
                         <span class="truncate flex items-center gap-2" onclick="loadSession('${data.id}')">📁 ${escapeHtml(data.preview)}</span>
                         <span onclick="deleteSession('${data.id}')" class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 font-bold px-1">✕</span>
                     `;
-                    dbHistoryList.appendChild(block);
+                    els.dbHistoryList.appendChild(block);
                     cursor.continue();
                 }
             };
@@ -230,11 +442,11 @@
                 if(data) {
                     currentSessionId = data.id;
                     chatHistory = data.history;
-                    chatContainer.innerHTML = '';
+                    els.chatContainer.innerHTML = '';
                     chatHistory.forEach(m => {
                         if(m.role !== 'system') displayMessage(m.role, m.content);
                     });
-                    createToast('Sesión restaurada correctamente', 'success');
+                    createToast(I18N[currentLang].toast_session_restored, 'success');
                 }
             };
         };
@@ -244,23 +456,23 @@
             transaction.objectStore('sessions').delete(id);
             transaction.oncomplete = () => {
                 if(currentSessionId === id) clearCurrentCanvas();
-                createToast('Sesión eliminada de la base de datos', 'info');
+                createToast(I18N[currentLang].toast_session_deleted, 'info');
                 refreshHistoryFromDB();
             };
         };
 
-        // INTERFACE RENDERING & LOGIC
+        // --- UI RENDERING & MARKDOWN PARSER ---
         function showInitialCanvas() {
-            chatContainer.innerHTML = `
+            const t = I18N[currentLang];
+            els.chatContainer.innerHTML = `
                 <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center pt-32 select-none animate-fadeIn">
                     <div class="w-14 h-14 rounded-2xl bg-[#2f2f2f] border border-[#424242] flex items-center justify-center text-2xl shadow-xl text-emerald-400 font-mono font-bold mb-5">⚡</div>
-                    <h2 class="text-2xl font-medium text-[#ececec] tracking-wide">Ops Nexus Architecture Active</h2>
-                    <p class="text-xs text-gray-500 mt-2 font-mono max-w-md">Instancia de orquestación aislada. Generación determinista de documentación y scripts mediante modelos optimizados.</p>
+                    <h2 class="text-2xl font-medium text-[#ececec] tracking-wide">${t.welcome_title}</h2>
+                    <p class="text-xs text-gray-500 mt-2 font-mono max-w-md">${t.welcome_desc}</p>
                 </div>`;
         }
 
         function formatMarkdown(text) {
-            // Renderizador de código en bloque avanzado con inyección de funciones nativas de descarga
             const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
             return text.replace(codeBlockRegex, (match, lang, code) => {
                 const codeId = 'code_' + Math.random().toString(36).substring(2, 9);
@@ -270,8 +482,8 @@
                         <div class="bg-[#111] px-4 py-2 flex justify-between items-center border-b border-[#2f2f2f] text-[10px] text-gray-500 font-bold tracking-wider select-none">
                             <span>${lang.toUpperCase() || 'SCRIPT / OUTPUT'}</span>
                             <div class="flex gap-3">
-                                <button onclick="copyToClipboard('${codeId}')" class="hover:text-white transition cursor-pointer">COPIAR</button>
-                                <button onclick="downloadCodeBlock('${codeId}', '${lang || 'txt'}')" class="hover:text-white transition cursor-pointer text-emerald-500">DESCARGAR SCRIPT</button>
+                                <button onclick="copyToClipboard('${codeId}')" class="hover:text-white transition cursor-pointer">COPY</button>
+                                <button onclick="downloadCodeBlock('${codeId}', '${lang || 'txt'}')" class="hover:text-white transition cursor-pointer text-emerald-500">DOWNLOAD</button>
                             </div>
                         </div>
                         <pre class="p-4 overflow-x-auto text-[13px] leading-relaxed"><code id="${codeId}">${escapeHtml(cleanCode)}</code></pre>
@@ -291,23 +503,23 @@
             } else {
                 row.innerHTML = `
                     <div class="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-md">O</div>
-                    <div class="flex-1 text-[#ececec] text-[14px] leading-relaxed tracking-wide select-text">${formatMarkdown(text)}</div>`;
+                    <div class="flex-1 text-[#ececec] text-[14px] leading-relaxed tracking-wide select-text prose prose-invert max-w-none">${formatMarkdown(text)}</div>`;
             }
-            chatContainer.appendChild(row);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            els.chatContainer.appendChild(row);
+            els.chatContainer.scrollTop = els.chatContainer.scrollHeight;
         }
 
-        // CONTROLADORES DE INTEGRACIÓN (JIRA REST INTEGRATION FRONTEND)
+        // --- INTEGRATIONS: JIRA & DEEPL ---
         async function extractExternalJiraContext() {
             const domain = document.getElementById('jira-domain').value.trim();
             const email = document.getElementById('jira-email').value.trim();
             const token = document.getElementById('jira-token').value.trim();
             const issueId = document.getElementById('jira-issue').value.trim();
+            const syncEnabled = document.getElementById('jira-sync-toggle').checked;
 
-            if (!domain || !email || !token || !issueId) return null;
+            if (!syncEnabled || !domain || !email || !token || !issueId) return null;
 
             try {
-                // Proxy CORS público intermedio para desarrollo seguro cliente-servidor directo
                 const proxy = 'https://cors-anywhere.herokuapp.com/';
                 const targetUrl = `https://${domain}/rest/api/3/issue/${issueId}`;
                 
@@ -320,89 +532,134 @@
                 });
                 if (!response.ok) return null;
                 const data = await response.json();
-                return `[DATOS TICKET JIRA CLOUD - ID: ${issueId}]\nResumen: ${data.fields?.summary || 'N/A'}\nDescripción: ${data.fields?.description?.content?.[0]?.content?.[0]?.text || 'N/A'}\nEstado: ${data.fields?.status?.name || 'N/A'}`;
+                return `[JIRA TICKET DATA - ID: ${issueId}]\nSummary: ${data.fields?.summary || 'N/A'}\nDescription: ${data.fields?.description?.content?.[0]?.content?.[0]?.text || 'N/A'}\nStatus: ${data.fields?.status?.name || 'N/A'}`;
             } catch (err) {
-                console.error(err);
+                console.error("Jira Fetch Error:", err);
                 return null;
             }
         }
 
-        // PIPELINE DE ENVÍO Y PROCESAMIENTO CORE
-        chatForm.addEventListener('submit', async (e) => {
+        async function translateViaDeepL(text, targetLang) {
+            const key = document.getElementById('deepl-key').value.trim();
+            if (!key) return text; // Fallback to original if no key
+
+            // Map app lang codes to DeepL codes
+            const langMap = { en: 'EN-US', es: 'ES', ca: 'ES', pt: 'PT-BR', de: 'DE', fr: 'FR' };
+            const target = langMap[targetLang] || 'EN-US';
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('auth_key', key);
+                formData.append('text', text);
+                formData.append('target_lang', target);
+
+                const res = await fetch('https://api.deepl.com/v2/translate', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                return data.translations?.[0]?.text || text;
+            } catch (e) {
+                console.error("DeepL Error:", e);
+                return text;
+            }
+        }
+
+        // --- CORE PIPELINE & ROUTING ---
+        els.chatForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const text = userInput.value.trim();
+            const text = els.userInput.value.trim();
             if (!text) return;
 
-            userInput.value = '';
-            userInput.disabled = true;
-            sendBtn.disabled = true;
+            els.userInput.value = '';
+            els.userInput.disabled = true;
+            els.sendBtn.disabled = true;
 
-            // Inyección automatizada de contexto Jira si los campos están completos en el Frontend
+            // Inject Jira Context if active
             const jiraContext = await extractExternalJiraContext();
             let finalPromptPayload = text;
             if(jiraContext) {
-                finalPromptPayload = `${jiraContext}\n\n[INSTRUCCIÓN TÉCNICA REQUERIDA SOBRE ESTE TICKET]:\n${text}`;
-                createToast('Contexto del ticket Jira inyectado al payload', 'info');
+                finalPromptPayload = `${jiraContext}\n\n[REQUIRED TECHNICAL INSTRUCTION REGARDING THIS TICKET]:\n${text}`;
+                createToast(I18N[currentLang].toast_jira_injected, 'info');
             }
 
             displayMessage('user', text);
 
-            // Verificación e inyección del System Prompt Seleccionado
+            // Inject System Prompt if first message
             if (chatHistory.length === 0) {
-                const currentPresetKey = promptPreset.value;
+                const currentPresetKey = els.promptPreset.value;
                 chatHistory.push({ role: 'system', content: SYSTEM_PRESETS[currentPresetKey] });
             }
 
             chatHistory.push({ role: 'user', content: finalPromptPayload });
 
+            // Loading Indicator
             const loadingRow = document.createElement('div');
             loadingRow.className = 'w-full flex gap-4 py-4 justify-start';
             loadingRow.innerHTML = `
                 <div class="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-md">O</div>
-                <div class="text-xs text-gray-500 font-mono flex items-center gap-2"><svg class="animate-spin h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4m2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg> Procesando Pipeline...</div>`;
-            chatContainer.appendChild(loadingRow);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+                <div class="text-xs text-gray-500 font-mono flex items-center gap-2"><svg class="animate-spin h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4m2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg> ${I18N[currentLang].toast_processing}</div>`;
+            els.chatContainer.appendChild(loadingRow);
+            els.chatContainer.scrollTop = els.chatContainer.scrollHeight;
 
-            const selectedEngine = engineSelect.value;
+            const selectedEngine = els.engineSelect.value;
+            let aiResponseText = "";
 
             try {
-                let aiResponseText = "";
-
                 if (selectedEngine === 'qwen') {
-                    // LLAMADA AL CLOUDFLARE WORKER DE PRODUCCIÓN (Groq API Protection)
                     const response = await fetch(PROXY_WORKER_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ messages: chatHistory })
                     });
-                    
-                    if(!response.ok) throw new Error("Error HTTP " + response.status);
+                    if(!response.ok) throw new Error("HTTP " + response.status);
                     const data = await response.json();
-                    aiResponseText = data.choices?.[0]?.message?.content || 'Carga útil vacía.';
-                } else {
-                    // PROCESAMIENTO LOCAL CLIENTE A ANTHROPIC CLAUDE DIRECTO
+                    aiResponseText = data.choices?.[0]?.message?.content || 'Empty payload.';
+
+                } else if (selectedEngine === 'claude') {
                     const key = document.getElementById('claude-key').value.trim();
-                    if(!key) {
-                        aiResponseText = "ERROR CRÍTICO: Seleccionaste Claude pero la clave API de Anthropic está vacía en los ajustes laterales.";
-                    } else {
-                        const response = await fetch('https://api.anthropic.com/v1/messages', {
-                            method: 'POST',
-                            headers: {
-                                'x-api-key': key,
-                                'anthropic-version': '2023-06-01',
-                                'content-type': 'application/json',
-                                'dangerously-allow-browser': 'true'
-                            },
-                            body: JSON.stringify({
-                                model: 'claude-3-5-sonnet-20241022',
-                                max_tokens: 4096,
-                                messages: chatHistory.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content })),
-                                system: chatHistory.find(m => m.role === 'system')?.content || ""
-                            })
-                        });
-                        const data = await response.json();
-                        aiResponseText = data.content?.[0]?.text || 'Error en respuesta de Anthropic Cloud.';
-                    }
+                    if(!key) throw new Error(I18N[currentLang].error_claude_key);
+                    
+                    const response = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: {
+                            'x-api-key': key,
+                            'anthropic-version': '2023-06-01',
+                            'content-type': 'application/json',
+                            'anthropic-dangerous-direct-browser-access': 'true'
+                        },
+                        body: JSON.stringify({
+                            model: 'claude-3-5-sonnet-20241022',
+                            max_tokens: 4096,
+                            messages: chatHistory.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content })),
+                            system: chatHistory.find(m => m.role === 'system')?.content || ""
+                        })
+                    });
+                    const data = await response.json();
+                    aiResponseText = data.content?.[0]?.text || 'Anthropic Cloud Error.';
+
+                } else if (selectedEngine === 'openai') {
+                    const key = document.getElementById('openai-key').value.trim();
+                    if(!key) throw new Error(I18N[currentLang].error_openai_key);
+
+                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${key}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-4o',
+                            messages: chatHistory
+                        })
+                    });
+                    const data = await response.json();
+                    aiResponseText = data.choices?.[0]?.message?.content || 'OpenAI Error.';
+                }
+
+                // Post-processing: Stream Translation if enabled
+                if (els.autoTranslateToggle.checked && currentLang !== 'en') {
+                    aiResponseText = await translateViaDeepL(aiResponseText, currentLang);
                 }
 
                 loadingRow.remove();
@@ -412,19 +669,19 @@
 
             } catch (error) {
                 loadingRow.remove();
-                displayMessage('assistant', `Fallo de comunicación en el Nodo: ${error.message}. Verifica que el Worker de Cloudflare esté online.`);
+                displayMessage('assistant', `${I18N[currentLang].error_network} ${error.message}`);
             } finally {
-                userInput.disabled = false;
-                sendBtn.disabled = false;
-                userInput.focus();
+                els.userInput.disabled = false;
+                els.sendBtn.disabled = false;
+                els.userInput.focus();
             }
         });
 
-        // UTILIDADES AVANZADAS DE CONTROL (Sistemas y Descargas de Datos)
+        // --- UTILITIES & HELPERS ---
         window.copyToClipboard = function(id) {
             const el = document.getElementById(id);
             navigator.clipboard.writeText(el.textContent);
-            createToast('Código copiado al portapapeles', 'success');
+            createToast(I18N[currentLang].toast_copied, 'success');
         };
 
         window.downloadCodeBlock = function(id, extension) {
@@ -433,14 +690,14 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `script_nexus_${Date.now()}.${extension === 'python' ? 'py' : extension === 'javascript' ? 'js' : extension === 'bash' ? 'sh' : 'txt'}`;
+            a.download = `nexus_script_${Date.now()}.${extension === 'python' ? 'py' : extension === 'javascript' ? 'js' : extension === 'bash' ? 'sh' : 'txt'}`;
             a.click();
             URL.revokeObjectURL(url);
-            createToast('Script descargado de forma segura', 'success');
+            createToast(I18N[currentLang].toast_downloaded, 'success');
         };
 
         window.exportSessionData = function(format) {
-            if (chatHistory.length === 0) return createToast('No hay datos en la sesión actual', 'info');
+            if (chatHistory.length === 0) return createToast(I18N[currentLang].toast_no_data, 'info');
             let content = "", filename = `nexus_export_${Date.now()}`;
             
             if (format === 'json') {
@@ -461,51 +718,22 @@
         window.clearCurrentCanvas = function() {
             chatHistory = [];
             currentSessionId = 'session_' + Date.now();
-            chatContainer.innerHTML = '';
+            els.chatContainer.innerHTML = '';
             showInitialCanvas();
-            createToast('Consola de trabajo restablecida', 'info');
+            createToast(I18N[currentLang].toast_console_reset, 'info');
         };
-
-        // EVENTOS DE LA CONFIGURACIÓN Y PERSISTENCIA GLOBAL DEL FRONT
-        engineSelect.addEventListener('change', () => {
-            const engine = engineSelect.value;
-            activeEngineBadge.textContent = engine === 'qwen' ? 'CORE STATUS: STABLE // MODEL: QWEN-32B' : 'CORE STATUS: HYBRID // MODEL: CLAUDE-3.5';
-            document.getElementById('claude-sec').style.display = engine === 'claude' ? 'block' : 'none';
-            localStorage.setItem('nexus_pref_engine', engine);
-        });
-
-        promptPreset.addEventListener('change', () => {
-            localStorage.setItem('nexus_pref_preset', promptPreset.value);
-            clearCurrentCanvas();
-        });
 
         window.toggleSection = function(id) {
-            const el = document.getElementById(id);
-            el.classList.toggle('hidden');
+            document.getElementById(id).classList.toggle('hidden');
         };
 
-        function loadSavedConfig() {
-            engineSelect.value = localStorage.getItem('nexus_pref_engine') || 'qwen';
-            promptPreset.value = localStorage.getItem('nexus_pref_preset') || 'sysadmin';
-            engineSelect.dispatchEvent(new Event('change'));
-            
-            fields.forEach(field => {
-                const input = document.getElementById(field);
-                input.value = localStorage.getItem(`nexus_${field}`) || '';
-                input.addEventListener('input', () => localStorage.setItem(`nexus_${field}`, input.value));
-            });
-        }
+        window.testJiraConnection = async function() {
+            createToast(I18N[currentLang].jira_validating, 'info');
+            const ctx = await extractExternalJiraContext();
+            if(ctx) createToast(I18N[currentLang].jira_success, 'success');
+            else createToast(I18N[currentLang].jira_fail, 'error');
+        };
 
-        function setupGlobalHotkeys() {
-            document.addEventListener('keydown', (e) => {
-                if (e.ctrlKey && e.key.toLowerCase() === 'n') {
-                    e.preventDefault();
-                    clearCurrentCanvas();
-                }
-            });
-        }
-
-        // ELEMENTOS UI COMPLEMENTARIOS (Toasts y escapado de código)
         function createToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -521,6 +749,7 @@
         }
 
         function escapeHtml(text) {
+            if(!text) return "";
             return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
@@ -530,12 +759,56 @@
             }));
         }
 
-        window.testJiraConnection = async function() {
-            createToast('Iniciando handshake de validación con Atlassian...', 'info');
-            const ctx = await extractExternalJiraContext();
-            if(ctx) createToast('Enlace establecido. Datos de Jira mapeados.', 'success');
-            else createToast('Handshake fallido. Revisa las credenciales de Jira.', 'error');
-        };
+        function setupGlobalHotkeys() {
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key.toLowerCase() === 'n') {
+                    e.preventDefault();
+                    clearCurrentCanvas();
+                }
+            });
+        }
+
+        function loadSavedConfig() {
+            // Load preferences
+            els.engineSelect.value = localStorage.getItem('nexus_pref_engine') || 'qwen';
+            els.promptPreset.value = localStorage.getItem('nexus_pref_preset') || 'sysadmin';
+            els.langSelect.value = localStorage.getItem('nexus_pref_lang') || 'en';
+            
+            // Trigger UI updates
+            updateEngineUI();
+            
+            // Load sensitive fields from LocalStorage (User accepted risk via enterprise context)
+            const fields = ['claude-key', 'openai-key', 'deepl-key', 'jira-domain', 'jira-email', 'jira-token', 'jira-issue'];
+            fields.forEach(field => {
+                const input = document.getElementById(field);
+                if(input) {
+                    input.value = localStorage.getItem(`nexus_${field}`) || '';
+                    input.addEventListener('input', () => localStorage.setItem(`nexus_${field}`, input.value));
+                }
+            });
+        }
+
+        els.engineSelect.addEventListener('change', () => {
+            localStorage.setItem('nexus_pref_engine', els.engineSelect.value);
+            updateEngineUI();
+        });
+
+        function updateEngineUI() {
+            const engine = els.engineSelect.value;
+            let badgeText = "CORE STATUS: STABLE // MODEL: QWEN-32B";
+            if(engine === 'claude') badgeText = "CORE STATUS: HYBRID // MODEL: CLAUDE-3.5";
+            if(engine === 'openai') badgeText = "CORE STATUS: DIRECT // MODEL: GPT-4O";
+            
+            els.activeEngineBadge.textContent = badgeText;
+            document.getElementById('claude-sec').style.display = engine === 'claude' ? 'block' : 'none';
+            document.getElementById('openai-sec').style.display = engine === 'openai' ? 'block' : 'none';
+        }
+
+        els.promptPreset.addEventListener('change', () => {
+            localStorage.setItem('nexus_pref_preset', els.promptPreset.value);
+            clearCurrentCanvas();
+        });
+
     </script>
 </body>
 </html>
